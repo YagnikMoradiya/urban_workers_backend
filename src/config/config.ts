@@ -1,0 +1,1 @@
+export const jwt_secret = 'c4893470f669916cc67caa894bc7da44f2aaaa92' || process.env.JWT_SECRET
