@@ -1,3 +1,5 @@
-const DB_URL = `mongodb://localhost:27017/chatus` || process.env.DB_URL
+import dotenv from "dotenv";
+dotenv.config();
+const DB_URL = process.env.DB_URL
 
-export {DB_URL}
+export { DB_URL }

@@ -1,8 +1,9 @@
+import { NextFunction, Request, Response } from "express";
 import httpStatus from "http-status";
-import { User } from "../models/index.js";
-import APIResponse from "./APIResponse.js";
+import { User } from "../models/index";
+import APIResponse from "./APIResponse";
 
-const userAlreadyExists = async (req, res, next) => {
+const userAlreadyExists = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const check = await User.findOne({
       email: req.body.email,

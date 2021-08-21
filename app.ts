@@ -30,5 +30,5 @@ mongoose
 setup(app);
 
 app.get("/", (req, res) => {
-  res.send("Hello Chatty");
+  res.send("Hello Urbans");
 });
