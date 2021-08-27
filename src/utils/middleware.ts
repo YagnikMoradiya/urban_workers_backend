@@ -1,9 +1,13 @@
 import { NextFunction, Request, Response } from "express";
 import httpStatus from "http-status";
-import { User } from "../models/index";
+import { Shop, User } from "../models/index";
 import APIResponse from "./APIResponse";
 
-const userAlreadyExists = async (req: Request, res: Response, next: NextFunction) => {
+const userAlreadyExists = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const check = await User.findOne({
       email: req.body.email,
@@ -36,4 +40,78 @@ const userAlreadyExists = async (req: Request, res: Response, next: NextFunction
   }
 };
 
-export { userAlreadyExists };
+const userExists = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response> => {
+  try {
+    const check = await User.findOne({
+      email: req.body.email,
+      is_deleted: false,
+    }).exec();
+
+    if (check) {
+      next();
+    }
+    return res
+      .status(httpStatus.BAD_REQUEST)
+      .json(
+        new APIResponse(
+          null,
+          "User not exists with this email",
+          httpStatus.BAD_REQUEST
+        )
+      );
+  } catch (error) {
+    return res
+      .status(httpStatus.BAD_REQUEST)
+      .json(
+        new APIResponse(
+          null,
+          "User not exists with this email",
+          httpStatus.BAD_REQUEST,
+          error
+        )
+      );
+  }
+};
+
+const shopAlreadyExists = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const check = await Shop.findOne({
+      email: req.body.email,
+      is_deleted: false,
+    }).exec();
+
+    if (check) {
+      return res
+        .status(httpStatus.BAD_REQUEST)
+        .json(
+          new APIResponse(
+            null,
+            "Shop Already exists with this email",
+            httpStatus.BAD_REQUEST
+          )
+        );
+    }
+    next();
+  } catch (error) {
+    return res
+      .status(httpStatus.BAD_REQUEST)
+      .json(
+        new APIResponse(
+          null,
+          "Shop Already exists with this email",
+          httpStatus.BAD_REQUEST,
+          error
+        )
+      );
+  }
+};
+
+export { userAlreadyExists, shopAlreadyExists, userExists };
