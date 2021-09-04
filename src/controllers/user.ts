@@ -8,7 +8,7 @@ import {
   hashPassword,
 } from "../utils/utils";
 import APIResponse from "../utils/APIResponse";
-import { GenderType } from "../utils/constant";
+import { GenderType, RoleType } from "../utils/constant";
 import { getJWTToken } from "../utils/jwt.helper";
 import { uploadImage } from "../utils/fileUpload";
 import { sendEmailHelper } from "../utils/emailer";
@@ -48,6 +48,7 @@ const register = {
           id: user._id,
           name: user.name,
           email: user.email,
+          role: RoleType.user,
         });
 
         const userData = {
@@ -119,6 +120,7 @@ const login = {
         id: user_exists._id,
         name: user_exists.name,
         email: user_exists.email,
+        role: RoleType.user,
       });
 
       const userData = {
@@ -204,6 +206,7 @@ const editUser = {
         id: user._id,
         name: user.name,
         email: user.email,
+        role: RoleType.user,
       });
 
       const userData = {
@@ -254,6 +257,7 @@ const validateUser = {
         id: user_exists._id,
         name: user_exists.name,
         email: user_exists.email,
+        role: RoleType.user,
       });
 
       const userData = {

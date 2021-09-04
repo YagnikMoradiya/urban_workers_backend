@@ -19,7 +19,7 @@ const addressSchema = new Schema<Address>(
             type: String,
             required: true,
         },
-        streetNumber: {
+        houseNumber: {
             type: String,
         },
         city: {

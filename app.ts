@@ -5,6 +5,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import { DB_URL } from "./src/config/dbconfig";
 import { setup } from "./src/routes/index";
+import { errors } from "celebrate";
 
 dotenv.config();
 const PORT = process.env.PORT || 5000;
@@ -14,6 +15,7 @@ const app = express();
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
+app.use(errors());
 
 mongoose
   .connect(DB_URL, {

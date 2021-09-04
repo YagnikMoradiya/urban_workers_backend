@@ -114,4 +114,41 @@ const shopAlreadyExists = async (
   }
 };
 
-export { userAlreadyExists, shopAlreadyExists, userExists };
+const shopExists = async (
+  req: any,
+  res: Response,
+  next: NextFunction
+): Promise<Response> => {
+  try {
+    const check = await Shop.findOne({
+      _id: req.user.id,
+      is_deleted: false,
+    }).exec();
+
+    if (!check) {
+      return res
+        .status(httpStatus.BAD_REQUEST)
+        .json(
+          new APIResponse(
+            null,
+            "Shop not exists with this id",
+            httpStatus.BAD_REQUEST
+          )
+        );
+    }
+    next();
+  } catch (error) {
+    return res
+      .status(httpStatus.BAD_REQUEST)
+      .json(
+        new APIResponse(
+          null,
+          "Shop not exists with this id",
+          httpStatus.BAD_REQUEST,
+          error
+        )
+      );
+  }
+};
+
+export { userAlreadyExists, shopAlreadyExists, userExists, shopExists };

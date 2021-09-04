@@ -1,7 +1,12 @@
 const GenderType = {
-    male: "MALE",
-    female: "FEMALE",
-    other: "OTHER"
-}
+  male: "MALE",
+  female: "FEMALE",
+  other: "OTHER",
+};
 
-export {GenderType}
+const RoleType = {
+  user: "USER",
+  shop: "SHOP",
+};
+
+export { GenderType, RoleType };
