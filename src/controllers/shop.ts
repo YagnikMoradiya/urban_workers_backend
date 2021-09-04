@@ -269,6 +269,8 @@ const addAddress = {
 
   controller: async (req: any, res: Response): Promise<Response> => {
     try {
+      req.body.createdOn = req.user.id;
+
       const new_address = await createAddress(req.body);
 
       if (!new_address) {
@@ -323,6 +325,8 @@ const addEmployee = {
         const imgUrl = await uploadImage(req.files[0]);
         req.body["avatar"] = imgUrl;
       }
+
+      req.body.shopId = req.user.id;
 
       const worker = new Worker(req.body);
       const workerData = await worker.save();

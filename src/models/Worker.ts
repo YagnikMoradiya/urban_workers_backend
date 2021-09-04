@@ -1,4 +1,4 @@
-import { model, Schema } from "mongoose";
+import { model, Schema, Types } from "mongoose";
 
 interface Worker {
   name: string;
@@ -13,24 +13,31 @@ const requiredString = {
   required: true,
 };
 
-const workerSchema = new Schema<Worker>({
-  name: requiredString,
-  avatar: String,
-  phone: requiredString,
-  experience: {
-    type: Number,
-    required: true,
-  },
-  location: {
-    type: {
-      type: String, // Don't do `{ location: { type: String } }`
-      enum: ["Point"], // 'location.type' must be 'Point'
+const workerSchema = new Schema<Worker>(
+  {
+    name: requiredString,
+    avatar: String,
+    phone: requiredString,
+    experience: {
+      type: Number,
+      required: true,
     },
-    coordinates: {
-      type: [Number],
+    shopId: {
+      type: Types.ObjectId,
+      required: true,
+    },
+    location: {
+      type: {
+        type: String, // Don't do `{ location: { type: String } }`
+        enum: ["Point"], // 'location.type' must be 'Point'
+      },
+      coordinates: {
+        type: [Number],
+      },
     },
   },
-});
+  { timestamps: true }
+);
 
 const WorkerModel = model<Worker>("Worker", workerSchema);
 

@@ -4,6 +4,7 @@ import httpStatus from "http-status";
 import APIResponse from "../utils/APIResponse";
 import { Address, Shop, User } from "../models";
 import { RoleType } from "../utils/constant";
+import { Types } from "mongoose";
 
 interface Body {
   name: string;
@@ -12,6 +13,7 @@ interface Body {
   city: string;
   state: string;
   zipCode: string;
+  createdOn: Types.ObjectId;
 }
 
 const createAddress = (body: Body) => {
@@ -23,6 +25,7 @@ const createAddress = (body: Body) => {
       city: body.city,
       state: body.state,
       zipCode: body.zipCode,
+      createdOn: body.createdOn,
     });
 
     return address.save();
