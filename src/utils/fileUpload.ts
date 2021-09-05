@@ -10,11 +10,11 @@ export const uploadImage = async (file: any) => {
       }
 
       const storage = new Storage({
-        projectId: "urban-workers",
+        projectId: "urban-creators",
         keyFilename: path.join(__dirname, "../../serviceAccount.json"),
       });
 
-      let bucketName = "urban-workers.appspot.com";
+      let bucketName = "urban-creators.appspot.com";
       var filePath = file.path;
 
       await storage.bucket(bucketName).upload(filePath, {

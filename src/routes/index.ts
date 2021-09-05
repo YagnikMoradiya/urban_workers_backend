@@ -6,6 +6,7 @@ import shop from "./shop";
 import general from "./general";
 import worker from "./worker";
 import address from "./address";
+import service from "./service";
 
 export const setup = (app: Application) => {
   app.use(
@@ -31,4 +32,5 @@ export const setup = (app: Application) => {
   app.use("/api/v1/general", general);
   app.use("/api/v1/worker", worker);
   app.use("/api/v1/address", address);
+  app.use("/api/v1/service", service);
 };

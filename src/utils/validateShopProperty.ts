@@ -2,6 +2,7 @@ export default (shop: any): boolean => {
   if (
     shop.staff.length > 0 &&
     shop.address.length > 0 &&
+    shop.service.length > 0 &&
     shop.is_deleted === false &&
     shop.category &&
     shop.category !== "" &&

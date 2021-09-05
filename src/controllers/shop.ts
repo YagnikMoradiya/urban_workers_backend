@@ -415,6 +415,57 @@ const setVerifiedFlag = {
   },
 };
 
+const getShopData = {
+  controller: async (req: any, res: Response): Promise<Response> => {
+    try {
+      const shop = await Shop.findOne({
+        _id: req.user.id,
+      })
+        .select("+address")
+        .select("+staff")
+        .select("+service")
+        .populate({
+          path: "address",
+        })
+        .populate({
+          path: "staff",
+        })
+        .populate({
+          path: "service",
+        });
+
+      if (!shop) {
+        return res
+          .status(httpStatus.BAD_REQUEST)
+          .json(
+            new APIResponse(
+              null,
+              "Error in getting ShopData",
+              httpStatus.BAD_REQUEST
+            )
+          );
+      }
+
+      return res
+        .status(httpStatus.OK)
+        .json(
+          new APIResponse(shop, "ShopData got successfully", httpStatus.OK)
+        );
+    } catch (error) {
+      return res
+        .status(httpStatus.BAD_REQUEST)
+        .json(
+          new APIResponse(
+            null,
+            "Error in getting ShopData",
+            httpStatus.BAD_REQUEST,
+            error
+          )
+        );
+    }
+  },
+};
+
 export {
   register,
   login,
@@ -423,4 +474,5 @@ export {
   updateGeneralDeatailOfShop,
   setVerifiedFlag,
   addEmployee,
+  getShopData,
 };

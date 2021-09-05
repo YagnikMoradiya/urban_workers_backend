@@ -8,10 +8,13 @@ import {
   addEmployee,
   addAddress,
   setVerifiedFlag,
+  getShopData,
 } from "../controllers/shop";
 import { shopAlreadyExists, shopExists } from "../utils/middleware";
 
 const router = express.Router();
+
+router.get("/get-shop/:id", getShopData.controller);
 
 router.post(
   "/register",
