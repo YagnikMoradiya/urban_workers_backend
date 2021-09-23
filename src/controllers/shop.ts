@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { celebrate, Joi } from "celebrate";
 import { comparePassword, hashPassword } from "../utils/utils";
-import { Shop, Worker } from "../models";
+import { Address, Shop, Worker } from "../models";
 import { getJWTToken } from "../utils/jwt.helper";
 import httpStatus from "http-status";
 import APIResponse from "../utils/APIResponse";
@@ -9,6 +9,7 @@ import { createAddress } from "../controllers/address";
 import { uploadImage } from "../utils/fileUpload";
 import validateShopProperty from "../utils/validateShopProperty";
 import { RoleType } from "../utils/constant";
+import { Types } from "mongoose";
 
 const register = {
   validator: celebrate({
@@ -16,7 +17,6 @@ const register = {
       email: Joi.string().required(),
       password: Joi.string().required(),
       name: Joi.string().required(),
-      ownerName: Joi.string().required(),
       phone: Joi.string().required(),
     }),
   }),
@@ -29,7 +29,6 @@ const register = {
         avatar: null,
         name: req.body.name,
         phone: req.body.phone,
-        owner_name: req.body.ownerName,
       });
 
       const shop = await new_shop.save();
@@ -48,7 +47,6 @@ const register = {
           name: shop.name,
           email: shop.email,
           avatar: shop.avatar,
-          owner_name: shop.owner_name,
           is_verified: shop.is_verified,
           token,
         };
@@ -174,12 +172,23 @@ const validateShop = {
         is_verified: shop_exists.is_verified,
       });
 
+      const status = {
+        generalDetail:
+          shop_exists.owner_name && shop_exists.owner_name !== ""
+            ? true
+            : false,
+        addressDetail: shop_exists.address.length > 0 ? true : false,
+        employeeDetail: shop_exists.staff.length > 0 ? true : false,
+        serviceDetail: shop_exists.service.length > 0 ? true : false,
+      };
+
       const userData = {
         id: shop_exists._id,
         email: shop_exists.email,
         name: shop_exists.name,
         avatar: shop_exists.avatar,
         is_verified: shop_exists.is_verified,
+        status,
         token,
       };
       return res
@@ -198,11 +207,10 @@ const validateShop = {
 const updateGeneralDeatailOfShop = {
   validator: celebrate({
     body: Joi.object().keys({
+      owner_name: Joi.string().required(),
       category: Joi.string().required(),
       start_time: Joi.string().required(),
       end_time: Joi.string().required(),
-      city: Joi.string().required(),
-      state: Joi.string().required(),
     }),
   }),
 
@@ -260,7 +268,6 @@ const addAddress = {
     body: Joi.object().keys({
       name: Joi.string().required(),
       streetAddress: Joi.string().required(),
-      houseNumber: Joi.string().required(),
       city: Joi.string().required(),
       state: Joi.string().required(),
       zipCode: Joi.string().required(),
@@ -269,10 +276,16 @@ const addAddress = {
 
   controller: async (req: any, res: Response): Promise<Response> => {
     try {
-      req.body.createdOn = req.user.id;
-
-      const new_address = await createAddress(req.body);
-
+      // location: Joi.object()
+      //   .keys({
+      //     type: Joi.string().required(),
+      //     coordinates: Joi.array().required(),
+      //   })
+      //   .required(),
+      const new_address = await createAddress({
+        ...req.body,
+        createdOn: req.user.id,
+      });
       if (!new_address) {
         return res
           .status(httpStatus.BAD_REQUEST)
@@ -280,12 +293,10 @@ const addAddress = {
             new APIResponse(null, "Address not added.", httpStatus.BAD_REQUEST)
           );
       }
-
       await Shop.findOneAndUpdate(
         { _id: req.user.id, is_deleted: false },
         { $push: { address: new_address._id } }
       );
-
       return res
         .status(httpStatus.OK)
         .json(
@@ -466,6 +477,104 @@ const getShopData = {
   },
 };
 
+const getNearestShop = {
+  controller: async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const shopIds = await Address.find({
+        location: {
+          $geoWithin: {
+            $center: [[73.2051, 22.3003], 10],
+          },
+        },
+        primaryAddress: true,
+      }).select("_id");
+
+      let ids = shopIds.map((id) => Types.ObjectId(id._id));
+
+      const shops = await Shop.find({
+        address: { $in: ids },
+        category: {
+          $regex: req.params.category,
+          $options: "i",
+        },
+        is_verified: true,
+      });
+
+      if (!shopIds) {
+        return res
+          .status(httpStatus.BAD_REQUEST)
+          .json(
+            new APIResponse(
+              null,
+              "Error in getting ShopData",
+              httpStatus.BAD_REQUEST
+            )
+          );
+      }
+
+      return res
+        .status(httpStatus.OK)
+        .json(
+          new APIResponse(shops, "ShopData got successfully", httpStatus.OK)
+        );
+    } catch (error) {
+      return res
+        .status(httpStatus.BAD_REQUEST)
+        .json(
+          new APIResponse(
+            null,
+            "Error in getting ShopData",
+            httpStatus.BAD_REQUEST,
+            error
+          )
+        );
+    }
+  },
+};
+
+const getTrackOfDetail = {
+  controller: async (req: any, res: Response): Promise<Response> => {
+    try {
+      const shopData = await Shop.findById(req.user.id);
+
+      if (!shopData) {
+        return res
+          .status(httpStatus.BAD_REQUEST)
+          .json(
+            new APIResponse(
+              null,
+              "Error in getting ShopData",
+              httpStatus.BAD_REQUEST
+            )
+          );
+      }
+
+      const resp = {
+        generalDetail:
+          shopData.owner_name && shopData.owner_name !== "" ? true : false,
+        addressDetail: shopData.address.length > 0 ? true : false,
+        employeeDetail: shopData.staff.length > 0 ? true : false,
+        serviceDetail: shopData.service.length > 0 ? true : false,
+      };
+
+      return res
+        .status(httpStatus.OK)
+        .json(new APIResponse(resp, "ShopData status", httpStatus.OK));
+    } catch (error) {
+      return res
+        .status(httpStatus.BAD_REQUEST)
+        .json(
+          new APIResponse(
+            null,
+            "Error in getting ShopData",
+            httpStatus.BAD_REQUEST,
+            error
+          )
+        );
+    }
+  },
+};
+
 export {
   register,
   login,
@@ -475,4 +584,6 @@ export {
   setVerifiedFlag,
   addEmployee,
   getShopData,
+  getNearestShop,
+  getTrackOfDetail,
 };

@@ -6,5 +6,18 @@ import City from "./City";
 import Category from "./Category";
 import Worker from "./Worker";
 import Service from "./Service";
+import Conversation from "./Conversation";
+import Message from "./Message";
 
-export { User, Address, Shop, State, City, Category, Worker, Service };
+export {
+  User,
+  Address,
+  Shop,
+  State,
+  City,
+  Category,
+  Worker,
+  Service,
+  Conversation,
+  Message,
+};

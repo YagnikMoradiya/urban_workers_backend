@@ -5,33 +5,59 @@ import APIResponse from "../utils/APIResponse";
 import { Address, Shop, User } from "../models";
 import { RoleType } from "../utils/constant";
 import { Types } from "mongoose";
+import axios from "axios";
 
 interface Body {
   name: string;
   streetAddress: string;
-  houseNumber: string;
   city: string;
   state: string;
   zipCode: string;
+  location: { type: string; location: [number, number] };
   createdOn: Types.ObjectId;
 }
 
-const createAddress = (body: Body) => {
-  try {
-    const address = new Address({
-      name: body.name,
-      streetAddress: body.streetAddress,
-      houseNumber: body.houseNumber,
-      city: body.city,
-      state: body.state,
-      zipCode: body.zipCode,
-      createdOn: body.createdOn,
-    });
+const createAddress = (body: Body): Promise<any> => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const addressString = `${body.streetAddress} ${body.city} ${body.zipCode} ${body.state}`;
 
-    return address.save();
-  } catch (error) {
-    return error;
-  }
+      const params = {
+        access_key: "4c2d0ec8df19a468bd5cf7bdbac18855",
+        query: addressString,
+        limit: 1,
+      };
+
+      const location = await axios.get(
+        "http://api.positionstack.com/v1/forward",
+        { params }
+      );
+
+      if (!location) {
+        reject();
+      }
+
+      const address = new Address({
+        name: body.name,
+        streetAddress: body.streetAddress,
+        city: body.city,
+        state: body.state,
+        zipCode: body.zipCode,
+        location: {
+          type: "Point",
+          coordinates: [
+            location.data.data[0].longitude,
+            location.data.data[0].latitude,
+          ],
+        },
+        createdOn: body.createdOn,
+      });
+
+      resolve(await address.save());
+    } catch (error) {
+      reject(error);
+    }
+  });
 };
 
 const deleteAddress = {
@@ -147,5 +173,7 @@ const updateAddress = {
     }
   },
 };
+
+// const getNearest
 
 export { createAddress, deleteAddress, updateAddress };

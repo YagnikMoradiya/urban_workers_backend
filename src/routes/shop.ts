@@ -9,12 +9,16 @@ import {
   addAddress,
   setVerifiedFlag,
   getShopData,
+  getNearestShop,
+  getTrackOfDetail,
 } from "../controllers/shop";
 import { shopAlreadyExists, shopExists } from "../utils/middleware";
 
 const router = express.Router();
 
 router.get("/get-shop/:id", getShopData.controller);
+
+router.get("/get-nearest-shop/:category", getNearestShop.controller);
 
 router.post(
   "/register",
@@ -49,5 +53,7 @@ router.post(
 );
 
 router.get("/shop-verified", setVerifiedFlag.controller);
+
+router.get("/shopdata-track", getTrackOfDetail.controller);
 
 export default router;

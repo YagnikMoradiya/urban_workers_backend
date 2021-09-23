@@ -19,9 +19,6 @@ const addressSchema = new Schema<Address>(
       type: String,
       required: true,
     },
-    houseNumber: {
-      type: String,
-    },
     city: {
       type: String,
       required: true,
@@ -37,6 +34,15 @@ const addressSchema = new Schema<Address>(
     primaryAddress: {
       type: Boolean,
       default: false,
+    },
+    location: {
+      type: {
+        type: String, // Don't do `{ location: { type: String } }`
+        enum: ["Point"], // 'location.type' must be 'Point'
+      },
+      coordinates: {
+        type: [Number],
+      },
     },
     createdOn: {
       type: Types.ObjectId,

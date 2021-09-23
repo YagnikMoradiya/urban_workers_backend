@@ -7,6 +7,7 @@ import general from "./general";
 import worker from "./worker";
 import address from "./address";
 import service from "./service";
+import chat from "./chat";
 
 export const setup = (app: Application) => {
   app.use(
@@ -22,7 +23,8 @@ export const setup = (app: Application) => {
         "/api/v1/user/forgot-password",
         "/api/v1/shop/register",
         "/api/v1/shop/login",
-        "/api/v1/general/category",
+        /^\/api\/v1\/general\/*/,
+        /^\/api\/v1\/shop\/get-nearest-shop\/*/,
       ],
     })
   );
@@ -33,4 +35,5 @@ export const setup = (app: Application) => {
   app.use("/api/v1/worker", worker);
   app.use("/api/v1/address", address);
   app.use("/api/v1/service", service);
+  app.use("/api/v1/chat", chat);
 };
