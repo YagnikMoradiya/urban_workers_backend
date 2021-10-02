@@ -8,6 +8,8 @@ import Worker from "./Worker";
 import Service from "./Service";
 import Conversation from "./Conversation";
 import Message from "./Message";
+import Review from "./Review";
+import Like from "./Like";
 
 export {
   User,
@@ -20,4 +22,6 @@ export {
   Service,
   Conversation,
   Message,
+  Review,
+  Like,
 };

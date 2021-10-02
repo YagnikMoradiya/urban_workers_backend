@@ -66,11 +66,60 @@ const createConversation = {
 const getConversation = {
   controller: async (req: any, res: Response): Promise<Response> => {
     try {
-      console.log(req.user.id);
-
       const conversations = await Conversation.find({
         members: {
           $in: [req.user.id],
+        },
+      });
+
+      if (!conversations) {
+        return res
+          .status(httpStatus.BAD_REQUEST)
+          .json(
+            new APIResponse(
+              null,
+              "Error in getting conversations",
+              httpStatus.BAD_REQUEST
+            )
+          );
+      }
+
+      return res
+        .status(httpStatus.OK)
+        .json(
+          new APIResponse(
+            conversations,
+            "Conversations get successfully",
+            httpStatus.OK
+          )
+        );
+    } catch (error) {
+      return res
+        .status(httpStatus.BAD_REQUEST)
+        .json(
+          new APIResponse(
+            null,
+            "Error in getting conversations",
+            httpStatus.BAD_REQUEST,
+            error
+          )
+        );
+    }
+  },
+};
+
+const getConversationWorker = {
+  validator: celebrate({
+    params: Joi.object().keys({
+      id: Joi.string().required(),
+    }),
+  }),
+
+  controller: async (req: any, res: Response): Promise<Response> => {
+    try {
+      const conversations = await Conversation.find({
+        members: {
+          $in: [req.params.id],
         },
       });
 
@@ -140,7 +189,7 @@ const createMessage = {
       return res
         .status(httpStatus.OK)
         .json(
-          new APIResponse(null, "Message sent successfully", httpStatus.OK)
+          new APIResponse(message, "Message sent successfully", httpStatus.OK)
         );
     } catch (error) {
       return res
@@ -185,7 +234,7 @@ const getMessages = {
       return res
         .status(httpStatus.OK)
         .json(
-          new APIResponse(null, "Message got susseccfully.", httpStatus.OK)
+          new APIResponse(messages, "Message got susseccfully.", httpStatus.OK)
         );
     } catch (error) {
       return res
@@ -202,4 +251,10 @@ const getMessages = {
   },
 };
 
-export { createConversation, getConversation, createMessage, getMessages };
+export {
+  createConversation,
+  getConversation,
+  createMessage,
+  getMessages,
+  getConversationWorker,
+};

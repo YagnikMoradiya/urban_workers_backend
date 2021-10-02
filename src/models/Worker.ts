@@ -4,6 +4,7 @@ interface Worker {
   name: string;
   avatar: string;
   phone: string;
+  shopId: string;
   experience: number;
   location: { type: {}; coordinates: {} };
 }
@@ -22,10 +23,7 @@ const workerSchema = new Schema<Worker>(
       type: Number,
       required: true,
     },
-    shopId: {
-      type: Types.ObjectId,
-      required: true,
-    },
+    shopId: requiredString,
     location: {
       type: {
         type: String, // Don't do `{ location: { type: String } }`

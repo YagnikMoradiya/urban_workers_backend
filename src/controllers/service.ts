@@ -1,7 +1,8 @@
 import { celebrate, Joi } from "celebrate";
 import { Request, Response } from "express";
 import httpStatus from "http-status";
-import { Service, Shop } from "../models";
+import { uploadImage } from "../utils/fileUpload";
+import { Review, Service, Shop } from "../models";
 import APIResponse from "../utils/APIResponse";
 
 const createService = {
@@ -16,6 +17,10 @@ const createService = {
 
   controller: async (req: any, res: Response): Promise<Response> => {
     try {
+      if (req.files.length) {
+        const imgUrl = await uploadImage(req.files[0]);
+        req.body["image"] = imgUrl;
+      }
       const newService = new Service({ ...req.body, shopId: req.user.id });
       const service = await newService.save();
 
@@ -131,6 +136,11 @@ const updateService = {
 
   controller: async (req: any, res: Response): Promise<Response> => {
     try {
+      if (req.files.length) {
+        const imgUrl = await uploadImage(req.files[0]);
+        req.body["image"] = imgUrl;
+      }
+
       const service = await Service.findOneAndUpdate(
         { _id: req.params.id, shopId: req.user.id },
         req.body,
@@ -173,4 +183,68 @@ const updateService = {
   },
 };
 
-export { createService, deleteService, updateService };
+const getServices = {
+  validator: celebrate({
+    params: Joi.object().keys({
+      id: Joi.string().required(),
+    }),
+  }),
+
+  controller: async (req: any, res: Response): Promise<Response> => {
+    try {
+      const services = await Service.find({
+        shopId: req.user.id,
+      });
+
+      if (!services) {
+        return res
+          .status(httpStatus.BAD_REQUEST)
+          .json(
+            new APIResponse(
+              null,
+              "Error in updating service",
+              httpStatus.BAD_REQUEST
+            )
+          );
+      }
+      const review: [] = await Review.findAvgStar();
+      const result = new Map(review.map((i: any) => [i._id, i.star]));
+
+      let newObj = services.map((a: any) => ({
+        _id: a._id,
+        avatar: a.image,
+        description: a.description,
+        price: a.price,
+        time: a.time,
+        name: a.name,
+        shopId: a.shopId,
+        updatedAt: a.updatedAt,
+        star:
+          result.get(a._id.toString()) > 0 ? result.get(a._id.toString()) : 0,
+      }));
+
+      return res
+        .status(httpStatus.OK)
+        .json(
+          new APIResponse(
+            newObj,
+            "Services getting successfully",
+            httpStatus.OK
+          )
+        );
+    } catch (error) {
+      return res
+        .status(httpStatus.BAD_REQUEST)
+        .json(
+          new APIResponse(
+            null,
+            "Error in getting services",
+            httpStatus.BAD_REQUEST,
+            error
+          )
+        );
+    }
+  },
+};
+
+export { createService, deleteService, updateService, getServices };

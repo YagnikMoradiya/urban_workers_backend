@@ -108,4 +108,89 @@ const updateWorker = {
   },
 };
 
-export { deleteWorker, updateWorker };
+const getWorkers = {
+  controller: async (req: any, res: Response): Promise<Response> => {
+    try {
+      const workers = await Worker.find({
+        shopId: req.user.id,
+      });
+
+      if (!workers) {
+        return res
+          .status(httpStatus.BAD_REQUEST)
+          .json(
+            new APIResponse(
+              null,
+              "Error in gettting Workers",
+              httpStatus.BAD_REQUEST
+            )
+          );
+      }
+
+      return res
+        .status(httpStatus.OK)
+        .json(
+          new APIResponse(workers, "Workers got successfully", httpStatus.OK)
+        );
+    } catch (error) {
+      return res
+        .status(httpStatus.BAD_REQUEST)
+        .json(
+          new APIResponse(
+            null,
+            "Error in getting Workers",
+            httpStatus.BAD_REQUEST,
+            error
+          )
+        );
+    }
+  },
+};
+
+const getWorkersById = {
+  validator: celebrate({
+    params: Joi.object().keys({
+      id: Joi.string().required(),
+    }),
+  }),
+
+  controller: async (req: any, res: Response): Promise<Response> => {
+    try {
+      const worker = await Worker.findOne({
+        _id: req.params.id,
+        shopId: req.user.id,
+      });
+
+      if (!worker) {
+        return res
+          .status(httpStatus.BAD_REQUEST)
+          .json(
+            new APIResponse(
+              null,
+              "Error in gettting Worker",
+              httpStatus.BAD_REQUEST
+            )
+          );
+      }
+
+      return res
+        .status(httpStatus.OK)
+        .json(
+          new APIResponse(worker, "Worker got successfully", httpStatus.OK)
+        );
+    } catch (error) {
+      return res
+        .status(httpStatus.BAD_REQUEST)
+        .json(
+          new APIResponse(
+            null,
+            "Error in getting Worker",
+            httpStatus.BAD_REQUEST,
+            error
+          )
+        );
+    }
+  },
+};
+
+export { deleteWorker, updateWorker, getWorkers, getWorkersById };

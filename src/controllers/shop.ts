@@ -575,6 +575,47 @@ const getTrackOfDetail = {
   },
 };
 
+const getShopsByCategory = {
+  validator: celebrate({
+    params: Joi.object().keys({
+      category: Joi.string().required(),
+    }),
+  }),
+
+  controller: async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const shops = await Shop.find({ category: req.params.category });
+
+      if (!shops) {
+        return res
+          .status(httpStatus.BAD_REQUEST)
+          .json(
+            new APIResponse(
+              null,
+              "Error in getting Shops",
+              httpStatus.BAD_REQUEST
+            )
+          );
+      }
+
+      return res
+        .status(httpStatus.OK)
+        .json(new APIResponse(shops, "Shops got successfully", httpStatus.OK));
+    } catch (error) {
+      return res
+        .status(httpStatus.BAD_REQUEST)
+        .json(
+          new APIResponse(
+            null,
+            "Error in getting Shops",
+            httpStatus.BAD_REQUEST,
+            error
+          )
+        );
+    }
+  },
+};
+
 export {
   register,
   login,
@@ -586,4 +627,5 @@ export {
   getShopData,
   getNearestShop,
   getTrackOfDetail,
+  getShopsByCategory,
 };

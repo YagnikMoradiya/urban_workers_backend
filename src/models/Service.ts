@@ -1,11 +1,12 @@
-import { model, Schema, Types } from "mongoose";
+import { Model, model, Schema, Types } from "mongoose";
+import { Review } from ".";
 
 interface IService {
   name: string;
   time: number;
   price: number;
   description: string;
-  shopId: Types.ObjectId;
+  shopId: string;
 }
 
 const ServiceSchema = new Schema<IService>(
@@ -27,8 +28,11 @@ const ServiceSchema = new Schema<IService>(
       required: true,
     },
     shopId: {
-      type: Types.ObjectId,
+      type: String,
       required: true,
+    },
+    image: {
+      type: String,
     },
   },
   { timestamps: true }

@@ -1,8 +1,17 @@
 import express from "express";
 import { upload } from "../utils/multer";
-import { deleteWorker, updateWorker } from "../controllers/worker";
+import {
+  deleteWorker,
+  getWorkers,
+  getWorkersById,
+  updateWorker,
+} from "../controllers/worker";
 
 const router = express.Router();
+
+router.get("/", getWorkers.controller);
+
+router.get("/:id", getWorkersById.validator, getWorkersById.controller);
 
 router.delete("/:id", deleteWorker.validator, deleteWorker.controller);
 

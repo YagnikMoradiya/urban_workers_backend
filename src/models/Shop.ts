@@ -41,6 +41,7 @@ const ShopSchema = new Schema<IShop, ShopModel>(
       default: "",
     },
     owner_name: String,
+    description: String,
     address: {
       type: [
         {
