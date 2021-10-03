@@ -7,6 +7,7 @@ interface IShop {
   avatar: string;
   name: string;
   owner_name: string;
+  description: string;
   address: [Types.ObjectId];
   phone: string;
   category: string;

@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { celebrate, Joi } from "celebrate";
 import { comparePassword, hashPassword } from "../utils/utils";
-import { Address, Shop, Worker } from "../models";
+import { Address, Review, Service, Shop, Worker } from "../models";
 import { getJWTToken } from "../utils/jwt.helper";
 import httpStatus from "http-status";
 import APIResponse from "../utils/APIResponse";
@@ -478,27 +478,26 @@ const getShopData = {
 };
 
 const getNearestShop = {
+  validator: celebrate({
+    params: Joi.object().keys({
+      category: Joi.string().required(),
+    }),
+    body: Joi.object().keys({
+      latitude: Joi.number().required(),
+      longitude: Joi.number().required(),
+      radius: Joi.number().required(),
+    }),
+  }),
+
   controller: async (req: Request, res: Response): Promise<Response> => {
     try {
-      const shopIds = await Address.find({
+      let shopIds = await Address.find({
         location: {
           $geoWithin: {
-            $center: [[73.2051, 22.3003], 10],
+            $center: [[req.body.longitude, req.body.latitude], req.body.radius],
           },
         },
-        primaryAddress: true,
-      }).select("_id");
-
-      let ids = shopIds.map((id) => Types.ObjectId(id._id));
-
-      const shops = await Shop.find({
-        address: { $in: ids },
-        category: {
-          $regex: req.params.category,
-          $options: "i",
-        },
-        is_verified: true,
-      });
+      }).select("createdOn");
 
       if (!shopIds) {
         return res
@@ -512,10 +511,83 @@ const getNearestShop = {
           );
       }
 
+      shopIds = shopIds.map((id: any) => id.createdOn);
+
+      const shops = await Shop.find({
+        _id: { $in: shopIds },
+        category: {
+          $regex: req.params.category,
+          $options: "i",
+        },
+        // is_verified: true,
+      })
+        .select("service")
+        .select("name");
+
+      if (!shops) {
+        return res
+          .status(httpStatus.BAD_REQUEST)
+          .json(
+            new APIResponse(
+              null,
+              "Error in getting ShopData",
+              httpStatus.BAD_REQUEST
+            )
+          );
+      }
+
+      const serviceIds: Types.ObjectId[] = [];
+
+      // To get All service Id
+      shops.map((s) => {
+        s.service.map((ss) => {
+          serviceIds.push(ss);
+        });
+      });
+
+      const service = await Service.find({
+        _id: { $in: serviceIds },
+      });
+
+      if (!service) {
+        return res
+          .status(httpStatus.BAD_REQUEST)
+          .json(
+            new APIResponse(
+              null,
+              "Error in getting ShopData",
+              httpStatus.BAD_REQUEST
+            )
+          );
+      }
+
+      const review: [] = await Review.findAvgStar();
+      const reviewResult = new Map(review.map((i: any) => [i._id, i.star]));
+      const shopResult = new Map(
+        shops.map((i: any) => [i._id.toString(), i.name])
+      );
+
+      const data = service.map((s) => {
+        return {
+          serviceId: s._id,
+          shopId: s.shopId,
+          image: s.image,
+          serviceName: s.name,
+          shopName: shopResult.get(s.shopId),
+          time: s.time,
+          price: s.price,
+          description: s.description,
+          star:
+            reviewResult.get(s._id.toString()) > 0
+              ? reviewResult.get(s._id.toString())
+              : 0,
+        };
+      });
+
       return res
         .status(httpStatus.OK)
         .json(
-          new APIResponse(shops, "ShopData got successfully", httpStatus.OK)
+          new APIResponse(data, "ShopData got successfully", httpStatus.OK)
         );
     } catch (error) {
       return res
@@ -575,18 +647,22 @@ const getTrackOfDetail = {
   },
 };
 
-const getShopsByCategory = {
+const getShopBasicData = {
   validator: celebrate({
     params: Joi.object().keys({
-      category: Joi.string().required(),
+      shopId: Joi.string().required(),
     }),
   }),
 
   controller: async (req: Request, res: Response): Promise<Response> => {
     try {
-      const shops = await Shop.find({ category: req.params.category });
+      const shop = await Shop.findOne({
+        _id: req.params.id,
+        is_deleted: false,
+        // is_verified: true
+      });
 
-      if (!shops) {
+      if (!shop) {
         return res
           .status(httpStatus.BAD_REQUEST)
           .json(
@@ -598,9 +674,15 @@ const getShopsByCategory = {
           );
       }
 
+      const data = {
+        shopId: shop._id,
+        shopName: shop.name,
+        description: shop.description,
+      };
+
       return res
         .status(httpStatus.OK)
-        .json(new APIResponse(shops, "Shops got successfully", httpStatus.OK));
+        .json(new APIResponse(data, "Shops got successfully", httpStatus.OK));
     } catch (error) {
       return res
         .status(httpStatus.BAD_REQUEST)
@@ -627,5 +709,5 @@ export {
   getShopData,
   getNearestShop,
   getTrackOfDetail,
-  getShopsByCategory,
+  getShopBasicData,
 };

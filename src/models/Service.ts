@@ -7,6 +7,7 @@ interface IService {
   price: number;
   description: string;
   shopId: string;
+  image: string;
 }
 
 const ServiceSchema = new Schema<IService>(

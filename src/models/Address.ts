@@ -7,6 +7,7 @@ interface Address {
   city: string;
   state: string;
   zipCode: string;
+  createdOn: string;
 }
 
 const addressSchema = new Schema<Address>(
