@@ -9,4 +9,11 @@ const RoleType = {
   shop: "SHOP",
 };
 
-export { GenderType, RoleType };
+const OrderType = {
+  ongoing: "ONGOING",
+  completed: "COMPLETED",
+  pending: "PENDING",
+  deleted: "DELETED",
+};
+
+export { GenderType, RoleType, OrderType };

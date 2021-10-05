@@ -10,6 +10,7 @@ import Conversation from "./Conversation";
 import Message from "./Message";
 import Review from "./Review";
 import Like from "./Like";
+import Order from "./Order";
 
 export {
   User,
@@ -24,4 +25,5 @@ export {
   Message,
   Review,
   Like,
+  Order,
 };

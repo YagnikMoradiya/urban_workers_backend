@@ -9,6 +9,7 @@ import address from "./address";
 import service from "./service";
 import chat from "./chat";
 import review from "./review";
+import order from "./order";
 
 export const setup = (app: Application) => {
   app.use(
@@ -38,4 +39,5 @@ export const setup = (app: Application) => {
   app.use("/api/v1/service", service);
   app.use("/api/v1/chat", chat);
   app.use("/api/v1/review", review);
+  app.use("/api/v1/order", order);
 };
