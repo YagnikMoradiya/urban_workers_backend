@@ -1,6 +1,22 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-const DB_URL = process.env.DB_URL
+let DB_URL: string;
 
-export { DB_URL }
+const production = process.env.ONLINE_DB_URL;
+
+const test = process.env.DB_URL;
+
+switch (process.env.NODE_ENV) {
+  case "development":
+    DB_URL = test;
+    break;
+  case "production":
+    DB_URL = production;
+    break;
+  default:
+    DB_URL = test;
+    break;
+}
+
+export { DB_URL };

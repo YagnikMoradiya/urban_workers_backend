@@ -4,11 +4,11 @@
   "description": "",
   "main": "app.ts",
   "scripts": {
-    "start": "ts-node app.ts",
+    "start": "set NODE_ENV=production&& ts-node app.ts",
     "dev": "nodemon app.ts",
-    "seed:state": "ts-node ./src/seeds/state.ts",
-    "seed:city": "ts-node ./src/seeds/city.ts",
-    "seed:category": "ts-node ./src/seeds/category.ts"
+    "seed:state": "set NODE_ENV=production&& ts-node ./src/seeds/state.ts",
+    "seed:city": "set NODE_ENV=production&& ts-node ./src/seeds/city.ts",
+    "seed:category": "set NODE_ENV=production&& ts-node ./src/seeds/category.ts"
   },
   "keywords": [],
   "author": "",

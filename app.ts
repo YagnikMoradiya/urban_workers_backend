@@ -9,6 +9,7 @@ import { setup } from "./src/routes/index";
 import { errors } from "celebrate";
 
 dotenv.config();
+
 const PORT = process.env.PORT || 5000;
 
 const app = express();
