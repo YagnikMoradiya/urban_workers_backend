@@ -14,6 +14,7 @@ const OrderType = {
   completed: "COMPLETED",
   pending: "PENDING",
   deleted: "DELETED",
+  cancelled: "CANCELLED",
 };
 
 export { GenderType, RoleType, OrderType };

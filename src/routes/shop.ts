@@ -12,6 +12,7 @@ import {
   getNearestShop,
   getTrackOfDetail,
   getShopBasicData,
+  searchShop,
 } from "../controllers/shop";
 import { shopAlreadyExists, shopExists } from "../utils/middleware";
 
@@ -66,5 +67,7 @@ router.get(
   getShopBasicData.validator,
   getShopBasicData.controller
 );
+
+router.get("/search-shop", searchShop.validator, searchShop.controller);
 
 export default router;

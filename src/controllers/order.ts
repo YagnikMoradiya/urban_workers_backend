@@ -5,7 +5,6 @@ import { calculateMinute } from "../utils/utils";
 import { Order } from "../models";
 import APIResponse from "../utils/APIResponse";
 import { OrderType, RoleType } from "../utils/constant";
-import moment from "moment";
 
 const createOrder = {
   validator: celebrate({
@@ -20,7 +19,7 @@ const createOrder = {
       perHour: Joi.number().required(),
       serviceId: Joi.string().required(),
       addressId: Joi.string().required(),
-      workerId: Joi.string().required(),
+      shopId: Joi.string().required(),
     }),
   }),
 
@@ -45,7 +44,7 @@ const createOrder = {
         perHour: req.body.perHour,
         serviceId: req.body.serviceId,
         addressId: req.body.addressId,
-        workerId: req.body.workerId,
+        shopId: req.body.shopId,
         userId: req.user.id,
       };
 
@@ -118,8 +117,92 @@ const getOrders = {
         .json(
           new APIResponse(orders, "Orders created successfully", httpStatus.OK)
         );
+    } catch (error) {
+      return res
+        .status(httpStatus.BAD_REQUEST)
+        .json(
+          new APIResponse(
+            null,
+            "Error in getting Orders",
+            httpStatus.BAD_REQUEST,
+            error
+          )
+        );
+    }
+  },
+};
 
-      console.log(orders);
+const getOrdersForShop = {
+  validator: celebrate({
+    query: Joi.object().keys({
+      type: Joi.string()
+        .allow(OrderType.pending, OrderType.completed, OrderType.cancelled, "")
+        .required(),
+    }),
+  }),
+
+  controller: async (req: any, res: Response): Promise<Response> => {
+    try {
+      const orders = await Order.find({
+        shopId: req.user.id,
+        status: req.query.type,
+      })
+        .populate("serviceId")
+        .populate("addressId")
+        .populate("userId")
+        .sort({
+          date: -1,
+        });
+
+      if (!orders) {
+        return res
+          .status(httpStatus.BAD_REQUEST)
+          .json(
+            new APIResponse(
+              null,
+              "Error in getting Orders",
+              httpStatus.BAD_REQUEST
+            )
+          );
+      }
+
+      const ordersData = orders.map((o: any) => {
+        const address = {
+          location: o.addressId.location.coordinates,
+          address: `${o.addressId.streetAddress}, ${o.addressId.city}-${o.addressId.zipCode}, ${o.addressId.state}`,
+        };
+
+        const user = {
+          id: o.userId._id,
+          name: o.userId.name,
+          phone: o.userId.phone,
+          gender: o.userId.gender,
+          email: o.userId.email,
+          address,
+        };
+        return {
+          category: o.category,
+          orderStatus: o.status,
+          date: o.date,
+          startTime: o?.startTime,
+          endTime: o?.endTime,
+          perHour: o.perHour,
+          totalCharge: o?.totalCharge,
+          serviceId: o.serviceId._id,
+          serviceName: o.serviceId.name,
+          user,
+        };
+      });
+
+      return res
+        .status(httpStatus.OK)
+        .json(
+          new APIResponse(
+            ordersData,
+            "Orders created successfully",
+            httpStatus.OK
+          )
+        );
     } catch (error) {
       return res
         .status(httpStatus.BAD_REQUEST)
@@ -327,4 +410,75 @@ const addEndTime = {
   },
 };
 
-export { createOrder, getOrders, changeStatus, addStartTime, addEndTime };
+const getOrdersNumber = {
+  controller: async (req: any, res: Response): Promise<Response> => {
+    try {
+      const pendingOrders = await Order.countDocuments(
+        {
+          shopId: req.user.id,
+          status: OrderType.pending,
+        },
+        (err, count) => {
+          return count;
+        }
+      );
+
+      const completedOrders = await Order.countDocuments(
+        {
+          shopId: req.user.id,
+          status: OrderType.completed,
+        },
+        (err, count) => {
+          return count;
+        }
+      );
+
+      const cancelledOrders = await Order.countDocuments(
+        {
+          shopId: req.user.id,
+          status: OrderType.cancelled,
+        },
+        (err, count) => {
+          return count;
+        }
+      );
+
+      const orderObject = {
+        pending: pendingOrders,
+        completed: completedOrders,
+        cancelled: cancelledOrders,
+      };
+
+      return res
+        .status(httpStatus.OK)
+        .json(
+          new APIResponse(
+            orderObject,
+            "Orders created successfully",
+            httpStatus.OK
+          )
+        );
+    } catch (error) {
+      return res
+        .status(httpStatus.BAD_REQUEST)
+        .json(
+          new APIResponse(
+            null,
+            "Error in getting Orders",
+            httpStatus.BAD_REQUEST,
+            error
+          )
+        );
+    }
+  },
+};
+
+export {
+  createOrder,
+  getOrders,
+  changeStatus,
+  addStartTime,
+  addEndTime,
+  getOrdersForShop,
+  getOrdersNumber,
+};

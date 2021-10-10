@@ -9,7 +9,12 @@ const OrderSchema = new Schema(
     },
     status: {
       type: String,
-      enum: [OrderType.pending, OrderType.ongoing, OrderType.completed],
+      enum: [
+        OrderType.pending,
+        OrderType.ongoing,
+        OrderType.completed,
+        OrderType.cancelled,
+      ],
       default: OrderType.pending,
     },
     date: {
@@ -23,10 +28,10 @@ const OrderSchema = new Schema(
       required: true,
     },
     totalCharge: Number,
-    serviceId: { type: String, required: true },
-    addressId: { type: String, required: true },
-    userId: { type: String, required: true },
-    workerId: { type: String, required: true },
+    serviceId: { type: String, required: true, ref: "Service" },
+    addressId: { type: String, required: true, ref: "Address" },
+    userId: { type: String, required: true, ref: "User" },
+    shopId: { type: String, required: true, ref: "Shop" },
   },
   { timestamps: true }
 );

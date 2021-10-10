@@ -1,7 +1,13 @@
 import express from "express";
-import { deleteAddress, updateAddress } from "../controllers/address";
+import {
+  deleteAddress,
+  getUsersAddress,
+  updateAddress,
+} from "../controllers/address";
 
 const router = express.Router();
+
+router.get("/get-address", getUsersAddress.controller);
 
 router.delete("/:id", deleteAddress.validator, deleteAddress.controller);
 

@@ -174,6 +174,43 @@ const updateAddress = {
   },
 };
 
-// const getNearest
+const getUsersAddress = {
+  controller: async (req: any, res: Response): Promise<Response> => {
+    try {
+      const addresses = await Address.find({
+        createdOn: req.user.id,
+      });
 
-export { createAddress, deleteAddress, updateAddress };
+      if (!addresses) {
+        return res
+          .status(httpStatus.BAD_REQUEST)
+          .json(
+            new APIResponse(
+              null,
+              "Error in getting Address",
+              httpStatus.BAD_REQUEST
+            )
+          );
+      }
+
+      return res
+        .status(httpStatus.OK)
+        .json(
+          new APIResponse(addresses, "Address got successfully", httpStatus.OK)
+        );
+    } catch (error) {
+      return res
+        .status(httpStatus.BAD_REQUEST)
+        .json(
+          new APIResponse(
+            null,
+            "Error in getting Address",
+            httpStatus.BAD_REQUEST,
+            error
+          )
+        );
+    }
+  },
+};
+
+export { createAddress, deleteAddress, updateAddress, getUsersAddress };

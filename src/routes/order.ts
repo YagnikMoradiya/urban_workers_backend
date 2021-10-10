@@ -5,6 +5,8 @@ import {
   changeStatus,
   createOrder,
   getOrders,
+  getOrdersForShop,
+  getOrdersNumber,
 } from "../controllers/order";
 
 const router = express.Router();
@@ -12,6 +14,10 @@ const router = express.Router();
 router.post("/add-order", createOrder.validator, createOrder.controller);
 
 router.get("/get-order", getOrders.controller);
+
+router.get("/get-numbers", getOrdersNumber.controller);
+
+router.get("/get-order-shop", getOrdersForShop.controller);
 
 router.put(
   "/change-status/:orderId",

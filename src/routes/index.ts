@@ -27,6 +27,7 @@ export const setup = (app: Application) => {
         "/api/v1/shop/login",
         /^\/api\/v1\/general\/*/,
         /^\/api\/v1\/shop\/get-nearest-shop\/*/,
+        /^\/api\/v1\/shop\/search-shop\/*/,
       ],
     })
   );

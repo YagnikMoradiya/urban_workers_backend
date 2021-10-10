@@ -261,7 +261,64 @@ const updateGeneralDeatailOfShop = {
   },
 };
 
-const updateShop = {};
+const searchShop = {
+  validator: celebrate({
+    query: Joi.object().keys({
+      shopName: Joi.string().required(),
+    }),
+  }),
+
+  controller: async (req: any, res: Response): Promise<Response> => {
+    try {
+      const shop = await Shop.find({
+        name: { $regex: req.query.shopName, $options: "i" },
+      }).populate({
+        path: "service",
+      });
+
+      if (!shop) {
+        return res
+          .status(httpStatus.BAD_REQUEST)
+          .json(
+            new APIResponse(null, "Can't find shop.", httpStatus.BAD_REQUEST)
+          );
+      }
+
+      const shopData = shop.map((s) => {
+        let image = [s?.avatar];
+        s.service.map((ss: any) => {
+          image.push(ss?.image);
+        });
+
+        return {
+          shopId: s._id,
+          shopName: s.name,
+          ownerName: s.owner_name,
+          category: s.category,
+          service: s.service.map((ss: any) => ss.name),
+          image,
+        };
+      });
+
+      return res
+        .status(httpStatus.OK)
+        .json(
+          new APIResponse(shopData, "Shops get successfully..", httpStatus.OK)
+        );
+    } catch (error) {
+      return res
+        .status(httpStatus.BAD_REQUEST)
+        .json(
+          new APIResponse(
+            null,
+            "Can't find shop.",
+            httpStatus.BAD_REQUEST,
+            error
+          )
+        );
+    }
+  },
+};
 
 const addAddress = {
   validator: celebrate({
@@ -710,4 +767,5 @@ export {
   getNearestShop,
   getTrackOfDetail,
   getShopBasicData,
+  searchShop,
 };
