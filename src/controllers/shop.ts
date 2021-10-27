@@ -1,6 +1,10 @@
 import { Request, Response } from "express";
 import { celebrate, Joi } from "celebrate";
-import { comparePassword, hashPassword } from "../utils/utils";
+import {
+  comparePassword,
+  generateRandomNumber,
+  hashPassword,
+} from "../utils/utils";
 import { Address, Review, Service, Shop, Worker } from "../models";
 import { getJWTToken } from "../utils/jwt.helper";
 import httpStatus from "http-status";
@@ -8,8 +12,11 @@ import APIResponse from "../utils/APIResponse";
 import { createAddress } from "../controllers/address";
 import { uploadImage } from "../utils/fileUpload";
 import validateShopProperty from "../utils/validateShopProperty";
-import { RoleType } from "../utils/constant";
+import { FilterType, RoleType } from "../utils/constant";
 import { Types } from "mongoose";
+import { sendEmailHelper } from "../utils/emailer";
+
+let otp: any = {};
 
 const register = {
   validator: celebrate({
@@ -148,6 +155,88 @@ const login = {
   },
 };
 
+const editShop = {
+  validator: celebrate({
+    body: Joi.object().keys({
+      name: Joi.string().required(),
+      phone: Joi.string().required(),
+      city: Joi.string().required(),
+      state: Joi.string().required(),
+    }),
+  }),
+
+  controller: async (req: any, res: Response) => {
+    try {
+      const shop_exists = await Shop.findOne({
+        _id: req.user.id,
+        is_deleted: false,
+      });
+
+      if (!shop_exists) {
+        return res
+          .status(httpStatus.BAD_REQUEST)
+          .json(
+            new APIResponse(null, "User not found.", httpStatus.BAD_REQUEST)
+          );
+      }
+
+      if (req.files.length) {
+        const imgUrl = await uploadImage(req.files[0]);
+        req.body["avatar"] = imgUrl;
+      }
+
+      const shop = await Shop.findOneAndUpdate(
+        {
+          _id: req.user.id,
+          is_deleted: false,
+        },
+        req.body,
+        { new: true }
+      );
+
+      if (!shop) {
+        return res
+          .status(httpStatus.BAD_REQUEST)
+          .json(
+            new APIResponse(null, "Shop not edited.", httpStatus.BAD_REQUEST)
+          );
+      }
+
+      const token = getJWTToken({
+        id: shop._id,
+        name: shop.name,
+        email: shop.email,
+        role: RoleType.shop,
+      });
+
+      const shopData = {
+        id: shop._id,
+        name: shop.name,
+        email: shop.email,
+        avatar: shop.avatar,
+        is_verified: shop.is_verified,
+        token,
+      };
+      return res
+        .status(httpStatus.OK)
+        .json(
+          new APIResponse(shopData, "User edit successfully.", httpStatus.OK)
+        );
+    } catch (error) {
+      return res
+        .status(httpStatus.BAD_REQUEST)
+        .json(
+          new APIResponse(
+            null,
+            "Shop not edited.",
+            httpStatus.BAD_REQUEST,
+            error
+          )
+        );
+    }
+  },
+};
+
 const validateShop = {
   controller: async (req: any, res: Response): Promise<Response> => {
     try {
@@ -211,6 +300,8 @@ const updateGeneralDeatailOfShop = {
       category: Joi.string().required(),
       start_time: Joi.string().required(),
       end_time: Joi.string().required(),
+      state: Joi.string().required(),
+      city: Joi.string().required(),
     }),
   }),
 
@@ -333,12 +424,6 @@ const addAddress = {
 
   controller: async (req: any, res: Response): Promise<Response> => {
     try {
-      // location: Joi.object()
-      //   .keys({
-      //     type: Joi.string().required(),
-      //     coordinates: Joi.array().required(),
-      //   })
-      //   .required(),
       const new_address = await createAddress({
         ...req.body,
         createdOn: req.user.id,
@@ -536,25 +621,41 @@ const getShopData = {
 
 const getNearestShop = {
   validator: celebrate({
-    params: Joi.object().keys({
-      category: Joi.string().required(),
-    }),
     body: Joi.object().keys({
-      latitude: Joi.number().required(),
-      longitude: Joi.number().required(),
-      radius: Joi.number().required(),
+      filter: Joi.string()
+        .allow(FilterType.city, FilterType.pincode, "")
+        .required(),
+      keyword: Joi.string().required(),
+      category: Joi.string().required(),
     }),
   }),
 
   controller: async (req: Request, res: Response): Promise<Response> => {
     try {
-      let shopIds = await Address.find({
-        location: {
-          $geoWithin: {
-            $center: [[req.body.longitude, req.body.latitude], req.body.radius],
+      let shopIds;
+      if (req.body.filter === "") {
+        shopIds = await Address.find().select("createdOn");
+      } else if (req.body.filter === FilterType.city) {
+        shopIds = await Address.find({
+          city: {
+            $regex: req.body.keyword,
+            $options: "i",
           },
-        },
-      }).select("createdOn");
+        }).select("createdOn");
+      } else if (req.body.filter === FilterType.pincode) {
+        shopIds = await Address.find({
+          zipCode: {
+            $regex: req.body.keyword,
+            $options: "i",
+          },
+        }).select("createdOn");
+      } else {
+        return res
+          .status(httpStatus.BAD_REQUEST)
+          .json(
+            new APIResponse(null, "Bad Filter Applied.", httpStatus.BAD_REQUEST)
+          );
+      }
 
       if (!shopIds) {
         return res
@@ -573,10 +674,9 @@ const getNearestShop = {
       const shops = await Shop.find({
         _id: { $in: shopIds },
         category: {
-          $regex: req.params.category,
+          $regex: req.body.category,
           $options: "i",
         },
-        // is_verified: true,
       })
         .select("service")
         .select("name");
@@ -755,6 +855,112 @@ const getShopBasicData = {
   },
 };
 
+const sendOtp = {
+  validator: celebrate({
+    body: Joi.object().keys({
+      email: Joi.string().required(),
+    }),
+  }),
+
+  controller: async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const user_exists = await Shop.findOne({
+        email: req.body.email,
+        is_deleted: false,
+      });
+
+      if (!user_exists) {
+        return res
+          .status(httpStatus.BAD_REQUEST)
+          .json(new APIResponse(null, "Wrong Email.", httpStatus.BAD_REQUEST));
+      }
+
+      const randNumber = generateRandomNumber();
+      if (otp[req.body.email] && otp[req.body.email].length) {
+        otp[req.body.email] = [...otp[req.body.email], randNumber];
+      } else {
+        otp[req.body.email] = [randNumber];
+      }
+
+      console.log(otp);
+
+      const info = await sendEmailHelper(req.body.email, "OTP", randNumber);
+      if (info) {
+        return res
+          .status(httpStatus.OK)
+          .json(new APIResponse(null, "Otp sent", httpStatus.OK));
+      }
+      return res
+        .status(httpStatus.BAD_REQUEST)
+        .json(
+          new APIResponse(null, "Otp did not send", httpStatus.BAD_REQUEST)
+        );
+    } catch (error) {
+      return res
+        .status(httpStatus.BAD_REQUEST)
+        .json(
+          new APIResponse(null, "OTP did not send.", httpStatus.BAD_REQUEST)
+        );
+    }
+  },
+};
+
+const forgotPassword = {
+  validator: celebrate({
+    body: Joi.object().keys({
+      email: Joi.string().required(),
+      password: Joi.string().required(),
+      otp: Joi.number().required(),
+    }),
+  }),
+
+  controller: async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const user_exists = await Shop.findOne({
+        email: req.body.email,
+        is_deleted: false,
+      });
+
+      if (!user_exists) {
+        return res
+          .status(httpStatus.BAD_REQUEST)
+          .json(new APIResponse(null, "Wrong Email.", httpStatus.BAD_REQUEST));
+      }
+
+      if (otp[req.body.email] && otp[req.body.email].includes(req.body.otp)) {
+        delete otp[req.body.email];
+        await Shop.updateOne(
+          {
+            email: req.body.email,
+            is_deleted: false,
+          },
+          {
+            password: await hashPassword(req.body.password, 10),
+          }
+        );
+
+        return res
+          .status(httpStatus.OK)
+          .json(new APIResponse(null, "Password changed", httpStatus.OK));
+      }
+      return res
+        .status(httpStatus.BAD_REQUEST)
+        .json(new APIResponse(null, "Wrong OTP", httpStatus.BAD_REQUEST));
+    } catch (error) {
+      return res
+        .status(httpStatus.BAD_REQUEST)
+        .json(
+          new APIResponse(
+            null,
+            "Password doesnt change.",
+            httpStatus.BAD_REQUEST,
+            error
+          )
+        );
+    }
+  },
+};
+
 export {
   register,
   login,
@@ -768,4 +974,7 @@ export {
   getTrackOfDetail,
   getShopBasicData,
   searchShop,
+  forgotPassword,
+  sendOtp,
+  editShop,
 };

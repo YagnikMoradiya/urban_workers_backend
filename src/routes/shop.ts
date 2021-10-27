@@ -13,8 +13,12 @@ import {
   getTrackOfDetail,
   getShopBasicData,
   searchShop,
+  sendOtp,
+  forgotPassword,
+  editShop,
 } from "../controllers/shop";
 import { shopAlreadyExists, shopExists } from "../utils/middleware";
+import multer from "multer";
 
 const router = express.Router();
 
@@ -34,6 +38,8 @@ router.post(
 );
 
 router.post("/login", login.validator, login.controller);
+
+router.put("/edit", upload.any(), editShop.validator, editShop.controller);
 
 router.get("/validate-token", validateShop.controller);
 
@@ -69,5 +75,13 @@ router.get(
 );
 
 router.get("/search-shop", searchShop.validator, searchShop.controller);
+
+router.post("/send-otp", sendOtp.validator, sendOtp.controller);
+
+router.post(
+  "/forgot-password",
+  forgotPassword.validator,
+  forgotPassword.controller
+);
 
 export default router;

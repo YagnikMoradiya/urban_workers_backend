@@ -23,6 +23,8 @@ export const setup = (app: Application) => {
         "/api/v1/user/login",
         "/api/v1/user/send-otp",
         "/api/v1/user/forgot-password",
+        "/api/v1/shop/send-otp",
+        "/api/v1/shop/forgot-password",
         "/api/v1/shop/register",
         "/api/v1/shop/login",
         /^\/api\/v1\/general\/*/,

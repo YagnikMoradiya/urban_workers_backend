@@ -17,4 +17,9 @@ const OrderType = {
   cancelled: "CANCELLED",
 };
 
-export { GenderType, RoleType, OrderType };
+const FilterType = {
+  pincode: "PINCODE",
+  city: "CITY",
+};
+
+export { GenderType, RoleType, OrderType, FilterType };

@@ -36,15 +36,6 @@ const addressSchema = new Schema<Address>(
       type: Boolean,
       default: false,
     },
-    location: {
-      type: {
-        type: String, // Don't do `{ location: { type: String } }`
-        enum: ["Point"], // 'location.type' must be 'Point'
-      },
-      coordinates: {
-        type: [Number],
-      },
-    },
     createdOn: {
       type: Types.ObjectId,
       required: true,

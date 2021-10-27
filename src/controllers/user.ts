@@ -55,6 +55,7 @@ const register = {
           id: user._id,
           name: user.name,
           email: user.email,
+          phone: user.phone,
           avatar: user.avatar,
           gender: user.gender,
           token,
@@ -126,6 +127,7 @@ const login = {
       const userData = {
         id: user_exists._id,
         email: user_exists.email,
+        phone: user_exists.phone,
         name: user_exists.name,
         avatar: user_exists.avatar,
         gender: user_exists.gender,
@@ -212,6 +214,7 @@ const editUser = {
       const userData = {
         id: user._id,
         email: user.email,
+        phone: user.phone,
         name: user.name,
         avatar: user.avatar,
         gender: user.gender,
