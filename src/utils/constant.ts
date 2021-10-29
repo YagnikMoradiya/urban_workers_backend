@@ -22,4 +22,10 @@ const FilterType = {
   city: "CITY",
 };
 
-export { GenderType, RoleType, OrderType, FilterType };
+const RequestType = {
+  pending: "PENDING",
+  declined: "DECLINED",
+  accepted: "ACCEPTED",
+};
+
+export { GenderType, RoleType, OrderType, FilterType, RequestType };

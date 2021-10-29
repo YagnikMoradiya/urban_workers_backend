@@ -96,9 +96,13 @@ const getOrders = {
         status: {
           $ne: OrderType.deleted,
         },
-      }).sort({
-        date: -1,
-      });
+      })
+        .populate("serviceId")
+        .populate("addressId")
+        .populate("shopId")
+        .sort({
+          date: -1,
+        });
 
       if (!orders) {
         return res
@@ -145,7 +149,10 @@ const getOrdersForShop = {
     try {
       const orders = await Order.find({
         shopId: req.user.id,
-        status: req.query.type,
+        status: {
+          $regex: req.query.type,
+          $options: "i",
+        },
       })
         .populate("serviceId")
         .populate("addressId")
@@ -168,7 +175,7 @@ const getOrdersForShop = {
 
       const ordersData = orders.map((o: any) => {
         const address = {
-          location: o.addressId.location.coordinates,
+          // location: o.addressId.location.coordinates,
           address: `${o.addressId.streetAddress}, ${o.addressId.city}-${o.addressId.zipCode}, ${o.addressId.state}`,
         };
 
@@ -181,8 +188,9 @@ const getOrdersForShop = {
           address,
         };
         return {
+          id: o._id,
+          status: o.status,
           category: o.category,
-          orderStatus: o.status,
           date: o.date,
           startTime: o?.startTime,
           endTime: o?.endTime,
@@ -280,9 +288,6 @@ const addStartTime = {
     params: Joi.object().keys({
       orderId: Joi.string().required(),
     }),
-    body: Joi.object().keys({
-      startTime: Joi.string().required(),
-    }),
   }),
 
   controller: async (req: any, res: Response): Promise<Response> => {
@@ -290,10 +295,9 @@ const addStartTime = {
       const updatedOrder = await Order.findOneAndUpdate(
         {
           _id: req.params.orderId,
-          status: { $ne: OrderType.deleted },
         },
         {
-          startTime: req.body.startTime,
+          startTime: new Date(),
         },
         { new: true }
       );
@@ -335,16 +339,12 @@ const addEndTime = {
     params: Joi.object().keys({
       orderId: Joi.string().required(),
     }),
-    body: Joi.object().keys({
-      endTime: Joi.string().required(),
-    }),
   }),
 
   controller: async (req: any, res: Response): Promise<Response> => {
     try {
       const order = await Order.findOne({
         _id: req.params.orderId,
-        status: { $ne: OrderType.deleted },
       });
 
       if (!order.startTime) {
@@ -359,11 +359,12 @@ const addEndTime = {
           );
       }
 
+      const endTime = new Date();
+
       let body = {
-        endTime: req.body.endTime,
+        endTime: endTime,
         totalCharge:
-          (order.perHour / 60) *
-          calculateMinute(order.startTime, parseInt(req.body.endTime)),
+          (order.perHour / 60) * calculateMinute(order.startTime, endTime),
         status: OrderType.completed,
       };
 
