@@ -45,7 +45,7 @@ const UserSchema = new Schema<IUser, UserModel>(
       default: GenderType.male,
     },
     address: {
-      type: Schema.Types.ObjectId,
+      type: [Schema.Types.ObjectId],
       ref: "Address",
     },
     is_verified: {

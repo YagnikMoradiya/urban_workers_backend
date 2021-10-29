@@ -91,7 +91,6 @@ const updateAddress = {
     body: Joi.object().keys({
       name: Joi.string(),
       streetAddress: Joi.string(),
-      houseNumber: Joi.string(),
       city: Joi.string(),
       state: Joi.string(),
       zipCode: Joi.string(),

@@ -2,6 +2,7 @@ import { model, Schema, Types } from "mongoose";
 
 interface Conversation {
   members: [string];
+  lastMessage: string;
 }
 
 const conversationSchema = new Schema(

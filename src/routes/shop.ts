@@ -16,6 +16,7 @@ import {
   sendOtp,
   forgotPassword,
   editShop,
+  shopBasicData,
 } from "../controllers/shop";
 import { shopAlreadyExists, shopExists } from "../utils/middleware";
 import multer from "multer";
@@ -24,8 +25,8 @@ const router = express.Router();
 
 router.get("/get-shop/:id", getShopData.controller);
 
-router.get(
-  "/get-nearest-shop/:category",
+router.post(
+  "/get-nearest-shop",
   getNearestShop.validator,
   getNearestShop.controller
 );
@@ -83,5 +84,7 @@ router.post(
   forgotPassword.validator,
   forgotPassword.controller
 );
+
+router.get("/shop-basic", shopBasicData.controller);
 
 export default router;

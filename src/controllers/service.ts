@@ -193,7 +193,7 @@ const getServices = {
   controller: async (req: any, res: Response): Promise<Response> => {
     try {
       const services = await Service.find({
-        shopId: req.user.id,
+        shopId: req.params.id,
       });
 
       if (!services) {

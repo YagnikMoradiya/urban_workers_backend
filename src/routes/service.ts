@@ -11,7 +11,7 @@ import { upload } from "../utils/multer";
 const router = express.Router();
 
 router.get(
-  "/",
+  "/:id",
   // getServices.validator,
   getServices.controller
 );

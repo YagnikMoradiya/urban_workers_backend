@@ -1,5 +1,5 @@
 import { celebrate, Joi } from "celebrate";
-import { Request, Response } from "express";
+import { Request, Response, text } from "express";
 import httpStatus from "http-status";
 import { Schema, Types } from "mongoose";
 import { Conversation, Message } from "../models";
@@ -185,6 +185,10 @@ const createMessage = {
             )
           );
       }
+
+      await Conversation.findByIdAndUpdate(req.body.conversationId, {
+        lastMessage: req.body.text,
+      });
 
       return res
         .status(httpStatus.OK)

@@ -625,7 +625,7 @@ const getNearestShop = {
       filter: Joi.string()
         .allow(FilterType.city, FilterType.pincode, "")
         .required(),
-      keyword: Joi.string().required(),
+      keyword: Joi.string().allow("").required(),
       category: Joi.string().required(),
     }),
   }),
@@ -961,6 +961,49 @@ const forgotPassword = {
   },
 };
 
+const shopBasicData = {
+  controller: async (req: any, res: Response): Promise<Response> => {
+    try {
+      const shopData = await Shop.findOne({
+        _id: req.user.id,
+        is_deleted: false,
+      });
+
+      if (!shopData) {
+        return res
+          .status(httpStatus.BAD_REQUEST)
+          .json(
+            new APIResponse(null, "ShopData not found.", httpStatus.BAD_REQUEST)
+          );
+      }
+
+      // const shopDataObj = {
+      //   id: shopData._id,
+      //   name: shopData.name,
+      //   phone: shopData.phone,
+      //   email: shopData.email,
+      //   city: shopData.city,
+
+      // }
+
+      return res
+        .status(httpStatus.OK)
+        .json(new APIResponse(shopData, "ShopData found.", httpStatus.OK));
+    } catch (error) {
+      return res
+        .status(httpStatus.BAD_REQUEST)
+        .json(
+          new APIResponse(
+            null,
+            "ShopData not found.",
+            httpStatus.BAD_REQUEST,
+            error
+          )
+        );
+    }
+  },
+};
+
 export {
   register,
   login,
@@ -977,4 +1020,5 @@ export {
   forgotPassword,
   sendOtp,
   editShop,
+  shopBasicData,
 };

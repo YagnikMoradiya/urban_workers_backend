@@ -1,6 +1,7 @@
 import express from "express";
 import { userAlreadyExists } from "../utils/middleware";
 import {
+  addAdress,
   editUser,
   forgotPassword,
   login,
@@ -32,5 +33,7 @@ router.post(
   forgotPassword.validator,
   forgotPassword.controller
 );
+
+router.post("/add-address", addAdress.validator, addAdress.controller);
 
 export default router;

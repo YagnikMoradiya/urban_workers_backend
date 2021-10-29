@@ -12,6 +12,7 @@ import { GenderType, RoleType } from "../utils/constant";
 import { getJWTToken } from "../utils/jwt.helper";
 import { uploadImage } from "../utils/fileUpload";
 import { sendEmailHelper } from "../utils/emailer";
+import { createAddress } from "./address";
 
 let otp: any = {};
 
@@ -390,4 +391,67 @@ const forgotPassword = {
   },
 };
 
-export { register, login, validateUser, editUser, sendOtp, forgotPassword };
+const addAdress = {
+  validator: celebrate({
+    body: Joi.object().keys({
+      name: Joi.string().required(),
+      streetAddress: Joi.string().required(),
+      city: Joi.string().required(),
+      state: Joi.string().required(),
+      zipCode: Joi.string().required(),
+    }),
+  }),
+
+  controller: async (req: any, res: Response): Promise<Response> => {
+    try {
+      const new_address = await createAddress({
+        ...req.body,
+        createdOn: req.user.id,
+      });
+
+      if (!new_address) {
+        return res
+          .status(httpStatus.BAD_REQUEST)
+          .json(
+            new APIResponse(null, "Address not added.", httpStatus.BAD_REQUEST)
+          );
+      }
+
+      await User.findOneAndUpdate(
+        { _id: req.user.id, is_deleted: false },
+        { $push: { address: new_address._id } }
+      );
+
+      return res
+        .status(httpStatus.OK)
+        .json(
+          new APIResponse(
+            new_address,
+            "Address added successfully",
+            httpStatus.OK
+          )
+        );
+    } catch (error) {
+      return res
+        .status(httpStatus.BAD_REQUEST)
+        .json(
+          new APIResponse(
+            null,
+            "Error in address add",
+            httpStatus.BAD_REQUEST,
+            error
+          )
+        );
+    }
+  },
+};
+
+export {
+  register,
+  login,
+  validateUser,
+  editUser,
+  sendOtp,
+  forgotPassword,
+  addAdress,
+};
